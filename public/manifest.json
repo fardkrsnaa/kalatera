@@ -1,0 +1,16 @@
+{
+  "name": "Kalatera",
+  "short_name": "Kalatera",
+  "description": "Sistem Absensi Digital",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
