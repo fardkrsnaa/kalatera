@@ -35,6 +35,8 @@ class Router {
 
   subscribe(listener: RouteListener): () => void {
     this.listeners.add(listener);
+    // Immediately call with current route so late subscribers get initial state
+    listener(this.currentRoute);
     return () => this.listeners.delete(listener);
   }
 
