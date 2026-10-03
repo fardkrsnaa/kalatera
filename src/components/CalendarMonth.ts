@@ -54,6 +54,9 @@ export class CalendarMonth {
 
     const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
     const calendarGrid: string[] = [];
+    
+    const today = new Date();
+    const isCurrentMonth = this.currentYear === today.getFullYear() && this.currentMonth === today.getMonth();
 
     for (let i = 0; i < firstDay; i++) {
       calendarGrid.push('<div class="day-cell empty"></div>');
@@ -62,8 +65,13 @@ export class CalendarMonth {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${this.currentYear}-${String(this.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const record = records[dateStr];
+      const dayOfWeek = new Date(this.currentYear, this.currentMonth, day).getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isToday = isCurrentMonth && day === today.getDate();
       
       let cellClass = 'day-cell';
+      if (isWeekend) cellClass += ' weekend';
+      if (isToday) cellClass += ' today';
       let cellContent = `<div class="day-number">${day}</div>`;
 
       if (record) {
@@ -91,30 +99,32 @@ export class CalendarMonth {
     this.container.className = 'card';
     this.container.innerHTML = `
       <div class="calendar-header">
-        <button class="btn btn-secondary" id="btn-prev-month">‹</button>
+        <div class="calendar-nav">
+          <button class="btn btn-secondary btn-icon" id="btn-prev-month" aria-label="Bulan Sebelumnya">‹</button>
+          <button class="btn btn-secondary" id="btn-today">Hari Ini</button>
+          <button class="btn btn-secondary btn-icon" id="btn-next-month" aria-label="Bulan Berikutnya">›</button>
+        </div>
         <h2>${monthNames[this.currentMonth]} ${this.currentYear}</h2>
-        <button class="btn btn-secondary" id="btn-next-month">›</button>
-        <button class="btn btn-secondary" id="btn-today">Hari Ini</button>
-        <button class="btn btn-primary" id="btn-export">📥 Simpan ke Excel</button>
+        <button class="btn btn-primary" id="btn-export">📥 Excel</button>
       </div>
 
-      <div class="calendar-summary" style="margin: var(--spacing-md) 0; padding: var(--spacing-md); background: var(--color-bg); border-radius: var(--radius-md);">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--spacing-md);">
-          <div>
-            <div style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase;">Hari Kerja</div>
-            <div style="font-size: 1.5rem; font-weight: 600;">${totalWorkDays}</div>
+      <div class="calendar-summary">
+        <div class="calendar-summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">Hari Kerja</div>
+            <div class="summary-value">${totalWorkDays}</div>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase;">Hari Libur</div>
-            <div style="font-size: 1.5rem; font-weight: 600;">${totalOffDays}</div>
+          <div class="summary-item">
+            <div class="summary-label">Hari Libur</div>
+            <div class="summary-value">${totalOffDays}</div>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase;">Total Jam Kerja</div>
-            <div style="font-size: 1.5rem; font-weight: 600;">${formatDuration(totalWorkMinutes)}</div>
+          <div class="summary-item">
+            <div class="summary-label">Total Jam Kerja</div>
+            <div class="summary-value primary">${formatDuration(totalWorkMinutes)}</div>
           </div>
-          <div>
-            <div style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase;">Total Lembur</div>
-            <div style="font-size: 1.5rem; font-weight: 600;">${formatDuration(totalOvertimeMinutes)}</div>
+          <div class="summary-item">
+            <div class="summary-label">Total Lembur</div>
+            <div class="summary-value danger">${formatDuration(totalOvertimeMinutes)}</div>
           </div>
         </div>
       </div>

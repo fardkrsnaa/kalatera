@@ -28,41 +28,59 @@ export class ClockPanel {
     const hasClockOut = record?.clockOut !== undefined;
 
     let statusHtml = '';
+    let statusBadge = '';
+    
     if (!hasClockIn) {
-      statusHtml = '<p style="color: var(--color-text-secondary);">Belum absen hari ini</p>';
+      statusBadge = '<span class="badge badge-off">Belum Absen</span>';
+      statusHtml = '<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Mulai hari kerja Anda dengan clock in</p>';
     } else if (hasClockIn && !hasClockOut && record.clockIn) {
       const liveMin = getLiveMinutes(record.clockIn.time);
+      statusBadge = '<span class="badge badge-work badge-dot">Sedang Bekerja</span>';
       statusHtml = `
-        <p style="color: var(--color-success); font-weight: 600;">Sedang Bekerja</p>
-        <p style="font-size: 1.5rem; margin: var(--spacing-sm) 0;">
-          ${formatDuration(liveMin)} <span style="font-size: 0.9rem; color: var(--color-text-secondary);">(${formatDecimal(liveMin)} jam)</span>
-        </p>
-        <p style="font-size: 0.875rem; color: var(--color-text-secondary);">Clock In: ${record.clockIn.time}</p>
+        <div style="margin: var(--spacing-6) 0;">
+          <div style="font-size: var(--text-4xl); font-weight: 700; color: var(--color-primary); line-height: 1;">
+            ${formatDuration(liveMin)}
+          </div>
+          <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--spacing-2);">
+            ${formatDecimal(liveMin)} jam · Clock In: ${record.clockIn.time.slice(0, 5)}
+          </div>
+        </div>
       `;
     } else {
-      statusHtml = '<p style="color: var(--color-success); font-weight: 600;">Absensi hari ini selesai</p>';
+      statusBadge = '<span class="badge badge-work">Selesai</span>';
+      statusHtml = '<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Absensi hari ini sudah lengkap</p>';
     }
 
-    this.container.className = 'card';
+    this.container.className = 'card card-elevated';
+    this.container.style.cssText = 'background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-elevated) 100%);';
     this.container.innerHTML = `
       <div style="text-align: center;">
-        <h2 style="margin-bottom: var(--spacing-md);">Absensi Hari Ini</h2>
+        <h2 style="font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--spacing-3);">Absensi Hari Ini</h2>
+        ${statusBadge}
         ${statusHtml}
-        <div style="margin-top: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm);">
+        <div style="margin-top: var(--spacing-8); display: flex; flex-direction: column; gap: var(--spacing-3);">
           ${!hasClockIn ? `
-            <select id="status-select" class="form-select" aria-label="Pilih Status">
-              <option value="WORK">Kerja</option>
-              <option value="OFF">Libur</option>
-              <option value="MIDDLE">Middle</option>
-              <option value="OVERTIME">Lembur</option>
+            <select id="status-select" class="form-select" aria-label="Pilih Status" style="text-align: center; font-weight: 500;">
+              <option value="WORK">🏢 Kerja</option>
+              <option value="OFF">🏖️ Libur</option>
+              <option value="MIDDLE">⏰ Middle</option>
+              <option value="OVERTIME">🌙 Lembur</option>
             </select>
-            <button class="btn btn-primary" id="btn-clock-in" style="font-size: 1.1rem; padding: var(--spacing-md);">
-              🕐 Clock In
+            <button class="btn btn-primary btn-lg" id="btn-clock-in" style="box-shadow: var(--shadow-primary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Clock In
             </button>
           ` : ''}
           ${hasClockIn && !hasClockOut ? `
-            <button class="btn btn-primary" id="btn-clock-out" style="font-size: 1.1rem; padding: var(--spacing-md);">
-              🕐 Clock Out
+            <button class="btn btn-primary btn-lg" id="btn-clock-out" style="box-shadow: var(--shadow-primary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Clock Out
             </button>
           ` : ''}
         </div>
