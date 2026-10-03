@@ -5,6 +5,7 @@ type RouteListener = (route: Route) => void;
 class Router {
   private listeners: Set<RouteListener> = new Set();
   private currentRoute: Route = 'absensi';
+  private initialized = false;
 
   constructor() {
     this.init();
@@ -18,7 +19,10 @@ class Router {
   private handleHashChange(): void {
     const hash = window.location.hash.slice(1);
     const route = this.parseRoute(hash);
-    if (route !== this.currentRoute) {
+    const isInitial = !this.initialized;
+    this.initialized = true;
+    
+    if (route !== this.currentRoute || isInitial) {
       this.currentRoute = route;
       this.notifyListeners();
     }

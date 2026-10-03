@@ -1,5 +1,3 @@
-import { SettingsModal } from './SettingsModal';
-
 export class Header {
   private container: HTMLElement;
 
@@ -12,15 +10,8 @@ export class Header {
     this.container.style.cssText = `
       text-align: center; 
       padding: var(--spacing-8) 0 var(--spacing-10) 0; 
-      position: relative;
     `;
     this.container.innerHTML = `
-      <button class="btn btn-ghost btn-icon" id="btn-settings" style="position: absolute; right: 0; top: var(--spacing-6);" aria-label="Pengaturan">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m13.2 5.2l-4.2-4.2m0-6l-4.2-4.2"></path>
-        </svg>
-      </button>
       <div style="display: inline-flex; align-items: center; gap: var(--spacing-3); margin-bottom: var(--spacing-2);">
         <div style="
           width: 48px; 
@@ -52,11 +43,6 @@ export class Header {
       </div>
       <p style="color: var(--color-text-secondary); font-size: var(--text-sm); font-weight: 500;">Sistem Absensi Digital</p>
     `;
-
-    this.container.querySelector('#btn-settings')!.addEventListener('click', () => {
-      const modal = new SettingsModal();
-      modal.open();
-    });
   }
 
   mount(parent: HTMLElement): void {
