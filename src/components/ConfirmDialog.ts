@@ -68,10 +68,10 @@ export async function deleteRecordWithConfirm(date: string): Promise<void> {
 
   const dialog = new ConfirmDialog('Apakah Anda yakin ingin menghapus absensi ini?');
   dialog.onConfirm(async () => {
-    if (record.clockIn) {
+    if (record.clockIn && record.clockIn.photoId !== 'no-photo') {
       await deletePhoto(record.clockIn.photoId).catch(() => {});
     }
-    if (record.clockOut) {
+    if (record.clockOut && record.clockOut.photoId !== 'no-photo') {
       await deletePhoto(record.clockOut.photoId).catch(() => {});
     }
 

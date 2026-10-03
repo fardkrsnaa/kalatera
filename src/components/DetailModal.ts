@@ -30,12 +30,12 @@ export class DetailModal {
     let photosHtml = '';
     
     if (record.clockIn) {
-      const photo = await getPhoto(record.clockIn.photoId);
+      const photo = record.clockIn.photoId !== 'no-photo' ? await getPhoto(record.clockIn.photoId) : null;
       const photoUrl = photo ? URL.createObjectURL(photo.blob) : '';
       photosHtml += `
         <div style="margin-bottom: var(--spacing-md);">
           <h3 style="margin-bottom: var(--spacing-sm);">Clock In</h3>
-          ${photoUrl ? `<img src="${photoUrl}" style="max-width: 100%; border-radius: var(--radius-md); margin-bottom: var(--spacing-xs);" />` : ''}
+          ${photoUrl ? `<img src="${photoUrl}" style="max-width: 100%; border-radius: var(--radius-md); margin-bottom: var(--spacing-xs);" />` : '<p style="font-size: 0.875rem; color: var(--color-text-secondary); font-style: italic;">Tanpa foto</p>'}
           <p style="font-size: 0.875rem;"><strong>Waktu:</strong> ${record.clockIn.time}</p>
           <p style="font-size: 0.875rem;"><strong>Lokasi:</strong> ${record.clockIn.address}</p>
           <p style="font-size: 0.75rem; color: var(--color-text-secondary);">Koordinat: ${record.clockIn.lat.toFixed(6)}, ${record.clockIn.lon.toFixed(6)}</p>
@@ -44,12 +44,12 @@ export class DetailModal {
     }
 
     if (record.clockOut) {
-      const photo = await getPhoto(record.clockOut.photoId);
+      const photo = record.clockOut.photoId !== 'no-photo' ? await getPhoto(record.clockOut.photoId) : null;
       const photoUrl = photo ? URL.createObjectURL(photo.blob) : '';
       photosHtml += `
         <div style="margin-bottom: var(--spacing-md);">
           <h3 style="margin-bottom: var(--spacing-sm);">Clock Out</h3>
-          ${photoUrl ? `<img src="${photoUrl}" style="max-width: 100%; border-radius: var(--radius-md); margin-bottom: var(--spacing-xs);" />` : ''}
+          ${photoUrl ? `<img src="${photoUrl}" style="max-width: 100%; border-radius: var(--radius-md); margin-bottom: var(--spacing-xs);" />` : '<p style="font-size: 0.875rem; color: var(--color-text-secondary); font-style: italic;">Tanpa foto</p>'}
           <p style="font-size: 0.875rem;"><strong>Waktu:</strong> ${record.clockOut.time}</p>
           <p style="font-size: 0.875rem;"><strong>Lokasi:</strong> ${record.clockOut.address}</p>
           <p style="font-size: 0.75rem; color: var(--color-text-secondary);">Koordinat: ${record.clockOut.lat.toFixed(6)}, ${record.clockOut.lon.toFixed(6)}</p>

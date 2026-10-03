@@ -1,10 +1,12 @@
 import { getRecord, saveRecord, getSettings } from '../core/storage';
 import { getToday, getCurrentTime } from '../core/date';
 import { CameraModal, type CaptureResult } from './CameraModal';
+import { PhotoOptionDialog } from './PhotoOptionDialog';
 import { showToast } from './Toast';
 import { store } from '../core/store';
 import { formatDuration, formatDecimal } from '../utils/format';
 import { getLiveMinutes } from '../core/calc';
+import { getCurrentPosition } from '../core/geolocation';
 
 export class ClockPanel {
   private container: HTMLDivElement;
@@ -99,11 +101,49 @@ export class ClockPanel {
       return;
     }
 
+    const dialog = new PhotoOptionDialog('CLOCK IN');
+    dialog.onPhoto(() => {
+      this.openCameraForClockIn(status);
+    });
+    dialog.onNoPhoto(async () => {
+      await this.saveClockInNoPhoto(status);
+    });
+    dialog.open();
+  }
+
+  private async openCameraForClockIn(status: 'WORK' | 'MIDDLE' | 'OVERTIME'): Promise<void> {
     const modal = new CameraModal('CLOCK IN');
     modal.onCapture((result: CaptureResult) => {
       this.saveClockIn(result, status);
     });
     await modal.open();
+  }
+
+  private async saveClockInNoPhoto(status: 'WORK' | 'MIDDLE' | 'OVERTIME'): Promise<void> {
+    const today = getToday();
+    const time = getCurrentTime();
+    const settings = getSettings();
+    const position = await getCurrentPosition();
+
+    const record = {
+      date: today,
+      status,
+      clockIn: {
+        time,
+        photoId: 'no-photo',
+        lat: position.lat,
+        lon: position.lon,
+        address: position.address,
+      },
+      breakMinutes: settings.defaultBreakMinutes,
+      normalHours: settings.defaultNormalHours,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    saveRecord(record);
+    store.notify();
+    showToast('Clock In berhasil (tanpa foto)', 'success');
   }
 
   private saveClockIn(result: CaptureResult, status: 'WORK' | 'MIDDLE' | 'OVERTIME'): void {
@@ -133,11 +173,48 @@ export class ClockPanel {
   }
 
   private async handleClockOut(): Promise<void> {
+    const dialog = new PhotoOptionDialog('CLOCK OUT');
+    dialog.onPhoto(() => {
+      this.openCameraForClockOut();
+    });
+    dialog.onNoPhoto(async () => {
+      await this.saveClockOutNoPhoto();
+    });
+    dialog.open();
+  }
+
+  private async openCameraForClockOut(): Promise<void> {
     const modal = new CameraModal('CLOCK OUT');
     modal.onCapture((result: CaptureResult) => {
       this.saveClockOut(result);
     });
     await modal.open();
+  }
+
+  private async saveClockOutNoPhoto(): Promise<void> {
+    const today = getToday();
+    const time = getCurrentTime();
+    const record = getRecord(today);
+
+    if (!record || !record.clockIn) {
+      showToast('Clock In belum dilakukan', 'error');
+      return;
+    }
+
+    const position = await getCurrentPosition();
+
+    record.clockOut = {
+      time,
+      photoId: 'no-photo',
+      lat: position.lat,
+      lon: position.lon,
+      address: position.address,
+    };
+    record.updatedAt = Date.now();
+
+    saveRecord(record);
+    store.notify();
+    showToast('Clock Out berhasil (tanpa foto)', 'success');
   }
 
   private saveClockOut(result: CaptureResult): void {
