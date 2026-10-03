@@ -3,6 +3,7 @@
 @import './layout.css';
 @import './components.css';
 @import './calendar.css';
+@import './utilities.css';
 
 #app {
   min-height: 100vh;

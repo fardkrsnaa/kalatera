@@ -11,9 +11,9 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 
 app.innerHTML = `
   <div class="container">
-    <div id="header"></div>
-    <div id="clock-panel"></div>
-    <div id="calendar-month" style="margin-top: var(--spacing-xl);"></div>
+    <div id="header" class="fade-in"></div>
+    <div id="clock-panel" class="fade-in-up" style="animation-delay: 0.1s;"></div>
+    <div id="calendar-month" class="fade-in-up" style="margin-top: var(--spacing-10); animation-delay: 0.2s;"></div>
   </div>
 `;
 

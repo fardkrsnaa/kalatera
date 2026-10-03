@@ -96,6 +96,8 @@ export class CalendarMonth {
       calendarGrid.push(`<div class="${cellClass}" data-date="${dateStr}">${cellContent}</div>`);
     }
 
+    const hasData = totalWorkDays > 0 || totalOffDays > 0;
+
     this.container.className = 'card';
     this.container.innerHTML = `
       <div class="calendar-header">
@@ -108,26 +110,28 @@ export class CalendarMonth {
         <button class="btn btn-primary" id="btn-export">📥 Excel</button>
       </div>
 
-      <div class="calendar-summary">
-        <div class="calendar-summary-grid">
-          <div class="summary-item">
-            <div class="summary-label">Hari Kerja</div>
-            <div class="summary-value">${totalWorkDays}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Hari Libur</div>
-            <div class="summary-value">${totalOffDays}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Total Jam Kerja</div>
-            <div class="summary-value primary">${formatDuration(totalWorkMinutes)}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Total Lembur</div>
-            <div class="summary-value danger">${formatDuration(totalOvertimeMinutes)}</div>
+      ${hasData ? `
+        <div class="calendar-summary">
+          <div class="calendar-summary-grid">
+            <div class="summary-item">
+              <div class="summary-label">Hari Kerja</div>
+              <div class="summary-value">${totalWorkDays}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Hari Libur</div>
+              <div class="summary-value">${totalOffDays}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Jam Kerja</div>
+              <div class="summary-value primary">${formatDuration(totalWorkMinutes)}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Lembur</div>
+              <div class="summary-value danger">${formatDuration(totalOvertimeMinutes)}</div>
+            </div>
           </div>
         </div>
-      </div>
+      ` : ''}
 
       <div class="calendar-grid">
         <div class="day-labels">
@@ -137,6 +141,21 @@ export class CalendarMonth {
           ${calendarGrid.join('')}
         </div>
       </div>
+
+      ${!hasData ? `
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h3 class="empty-state-title">Belum Ada Absensi</h3>
+          <p class="empty-state-description">Bulan ini belum ada data absensi. Mulai dengan clock in di panel atas.</p>
+        </div>
+      ` : ''}
     `;
 
     this.container.querySelector('#btn-prev-month')!.addEventListener('click', () => this.prevMonth());
