@@ -2,14 +2,16 @@ import { router } from '../core/router';
 
 export class AppShell {
   private container: HTMLDivElement;
+  private viewContainer: HTMLElement;
   private sidebar!: HTMLElement;
-  private mainContent!: HTMLElement;
   private currentView: HTMLElement | null = null;
   private isSidebarCollapsed = false;
+  private isTransitioning = false;
 
   constructor() {
     this.container = document.createElement('div');
     this.render();
+    this.viewContainer = this.container.querySelector('#view-container')!;
     this.bindEvents();
     this.initRouter();
   }
@@ -55,12 +57,13 @@ export class AppShell {
             <h1 class="main-header-title" id="page-title">Absensi</h1>
           </div>
         </header>
-        <div class="main-body" id="main-body"></div>
+        <div class="main-body">
+          <div class="view-transition-container" id="view-container"></div>
+        </div>
       </main>
     `;
 
     this.sidebar = this.container.querySelector('#sidebar')!;
-    this.mainContent = this.container.querySelector('#main-body')!;
     this.renderSidebarNav();
   }
 
@@ -142,46 +145,74 @@ export class AppShell {
   }
 
   private async switchView(route: string): Promise<void> {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
     const { AbsensiView } = await import('./AbsensiView');
     const { DataAbsensiView } = await import('./DataAbsensiView');
     const { SettingsView } = await import('./SettingsView');
 
     const oldView = this.currentView;
-    let newView: HTMLElement;
+    let newViewElement: HTMLElement;
 
     switch (route) {
       case 'data':
-        newView = new DataAbsensiView().element;
+        newViewElement = new DataAbsensiView().element;
         break;
       case 'settings':
-        newView = new SettingsView().element;
+        newViewElement = new SettingsView().element;
         break;
       default:
-        newView = new AbsensiView().element;
+        newViewElement = new AbsensiView().element;
     }
 
+    // Prepare new view for transition
+    newViewElement.classList.add('view-page', 'entering');
+    
     if (oldView) {
-      await this.transitionOut(oldView);
+      await this.crossFadeTransition(oldView, newViewElement);
+    } else {
+      // First load - just show new view
+      newViewElement.classList.remove('entering');
+      newViewElement.classList.add('active');
+      this.viewContainer.appendChild(newViewElement);
+      this.staggerChildren(newViewElement);
     }
 
-    await this.transitionIn(newView);
-    this.currentView = newView;
+    this.currentView = newViewElement;
+    this.isTransitioning = false;
   }
 
-  private async transitionIn(view: HTMLElement): Promise<void> {
-    view.classList.add('view-enter');
-    this.mainContent.appendChild(view);
-    await this.sleep(10);
-    view.classList.add('view-enter-active');
-    this.staggerChildren(view);
+  private async crossFadeTransition(oldView: HTMLElement, newView: HTMLElement): Promise<void> {
+    // Ensure container has relative positioning
+    this.viewContainer.style.position = 'relative';
+    this.viewContainer.style.minHeight = '200px';
+
+    // Add new view to container (both views in DOM now)
+    newView.classList.add('view-page', 'entering');
+    this.viewContainer.appendChild(newView);
+
+    // Force reflow to ensure initial state is applied
+    void newView.offsetWidth;
+
+    // Start transition: old leaves, new enters
+    oldView.classList.add('view-page', 'active', 'leaving');
+    newView.classList.remove('entering');
+    newView.classList.add('active');
+
+    // Stagger children of new view
+    this.staggerChildren(newView);
+
+    // Wait for transition to complete
     await this.sleep(250);
-    view.classList.remove('view-enter', 'view-enter-active');
-  }
 
-  private async transitionOut(view: HTMLElement): Promise<void> {
-    view.classList.add('view-leave');
-    await this.sleep(150);
-    view.remove();
+    // Cleanup old view
+    oldView.remove();
+    oldView.classList.remove('active', 'leaving');
+    
+    // Cleanup new view classes
+    newView.classList.remove('leaving', 'entering');
+    // Keep 'view-page' and 'active'
   }
 
   private staggerChildren(view: HTMLElement): void {
