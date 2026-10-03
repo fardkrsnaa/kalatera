@@ -17,12 +17,29 @@ export class ConfirmDialog {
   private render(): void {
     this.container.className = 'modal-overlay';
     this.container.innerHTML = `
-      <div class="modal" style="max-width: 400px;">
+      <div class="modal" style="max-width: 440px;">
         <div class="modal-header">
-          <h2>Konfirmasi</h2>
+          <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+            <div style="
+              width: 40px; 
+              height: 40px; 
+              background: var(--color-danger-light); 
+              border-radius: var(--radius-full); 
+              display: flex; 
+              align-items: center; 
+              justify-content: center;
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h2 style="font-size: var(--text-xl);">Konfirmasi</h2>
+          </div>
         </div>
         <div class="modal-body">
-          <p>${this.message}</p>
+          <p style="color: var(--color-text-secondary); line-height: 1.6;">${this.message}</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="btn-cancel">Batal</button>

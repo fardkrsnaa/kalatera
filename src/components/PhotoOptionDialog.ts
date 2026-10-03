@@ -11,19 +11,28 @@ export class PhotoOptionDialog {
   private render(type: string): void {
     this.container.className = 'modal-overlay';
     this.container.innerHTML = `
-      <div class="modal" style="max-width: 400px;">
+      <div class="modal" style="max-width: 440px;">
         <div class="modal-header">
-          <h2>${type}</h2>
+          <h2 style="font-size: var(--text-xl);">${type}</h2>
           <button class="btn-close" aria-label="Tutup">✕</button>
         </div>
         <div class="modal-body">
-          <p style="margin-bottom: var(--spacing-md);">Pilih metode absensi:</p>
-          <button class="btn btn-primary" id="btn-with-photo" style="width: 100%; margin-bottom: var(--spacing-sm);">
-            📷 Ambil Foto
-          </button>
-          <button class="btn btn-secondary" id="btn-no-photo" style="width: 100%;">
-            ✓ Tanpa Foto
-          </button>
+          <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary); text-align: center;">Pilih metode absensi</p>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
+            <button class="btn btn-primary btn-lg" id="btn-with-photo" style="width: 100%; justify-content: center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              Ambil Foto
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-no-photo" style="width: 100%; justify-content: center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Tanpa Foto
+            </button>
+          </div>
         </div>
       </div>
     `;

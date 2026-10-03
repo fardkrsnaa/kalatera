@@ -33,27 +33,53 @@ export class CameraModal {
     this.container.innerHTML = `
       <div class="modal" style="max-width: 800px;">
         <div class="modal-header">
-          <h2>${this.type}</h2>
+          <h2 style="font-size: var(--text-xl);">${this.type}</h2>
           <button class="btn-close" aria-label="Tutup">✕</button>
         </div>
-        <div class="modal-body">
-          <div style="position: relative; background: black; border-radius: var(--radius-md); overflow: hidden;">
-            <video id="camera-video" style="width: 100%; display: block;" playsinline muted autoplay></video>
-            <div id="camera-status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.8); padding: var(--spacing-md); border-radius: var(--radius-md); display: none;">
-              <p>Memuat kamera...</p>
+        <div class="modal-body" style="padding: 0;">
+          <div style="position: relative; background: black; overflow: hidden; min-height: 400px;">
+            <video id="camera-video" style="width: 100%; display: block; border-radius: var(--radius-lg);" playsinline muted autoplay></video>
+            <div id="camera-status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.85); padding: var(--spacing-6); border-radius: var(--radius-lg); display: none; backdrop-filter: blur(8px); text-align: center;">
+              <div style="margin-bottom: var(--spacing-3);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                  <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="6" y2="12"></line>
+                  <line x1="18" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                  <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+              </div>
+              <p style="font-weight: 500;">Memuat kamera...</p>
             </div>
           </div>
-          <div id="camera-error" style="color: var(--color-danger); margin-top: var(--spacing-sm); display: none;"></div>
+          <div id="camera-error" style="color: var(--color-danger); padding: var(--spacing-4); display: none; background: var(--color-danger-light); margin: var(--spacing-4); border-radius: var(--radius-md);"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="btn-switch">
-            <span>🔄</span> Ganti Kamera
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            Ganti Kamera
           </button>
-          <button class="btn btn-primary" id="btn-capture">
-            <span>📷</span> Ambil Foto
+          <button class="btn btn-primary btn-lg" id="btn-capture">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            Ambil Foto
           </button>
         </div>
       </div>
+      <style>
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      </style>
     `;
 
     this.video = this.container.querySelector('#camera-video')!;

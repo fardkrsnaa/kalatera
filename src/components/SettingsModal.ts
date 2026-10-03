@@ -18,7 +18,7 @@ export class SettingsModal {
     this.container.innerHTML = `
       <div class="modal">
         <div class="modal-header">
-          <h2>Pengaturan</h2>
+          <h2 style="font-size: var(--text-xl);">Pengaturan</h2>
           <button class="btn-close" aria-label="Tutup">✕</button>
         </div>
         <div class="modal-body">
@@ -26,26 +26,26 @@ export class SettingsModal {
             <div class="form-group">
               <label class="form-label" for="default-break">Istirahat Default (menit)</label>
               <input type="number" id="default-break" class="form-input" value="${settings.defaultBreakMinutes}" min="0" max="480" required />
-              <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: var(--spacing-xs);">
-                Waktu istirahat default untuk record baru
-              </p>
+              <p class="form-helper">Waktu istirahat default untuk record baru</p>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="default-hours">Jam Normal Default (jam)</label>
               <input type="number" id="default-hours" class="form-input" value="${settings.defaultNormalHours}" min="1" max="24" step="0.5" required />
-              <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: var(--spacing-xs);">
-                Jam kerja normal per hari (batas sebelum dihitung lembur)
-              </p>
+              <p class="form-helper">Jam kerja normal per hari (batas sebelum dihitung lembur)</p>
             </div>
 
-            <div class="form-group">
+            <div class="divider"></div>
+
+            <div class="form-group" style="margin-bottom: 0;">
               <button type="button" class="btn btn-danger" id="btn-clear-data" style="width: 100%;">
-                🗑️ Hapus Semua Data
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Hapus Semua Data
               </button>
-              <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: var(--spacing-xs);">
-                Menghapus semua record absensi dan foto
-              </p>
+              <p class="form-helper">Menghapus semua record absensi dan foto. Tindakan ini tidak dapat dibatalkan.</p>
             </div>
           </form>
         </div>
