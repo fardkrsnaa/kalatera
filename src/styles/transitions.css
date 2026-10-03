@@ -1,0 +1,49 @@
+/* ===== VIEW TRANSITIONS ===== */
+.view-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.view-enter-active {
+  animation: viewEnter var(--transition-slow) forwards;
+}
+
+.view-leave {
+  animation: viewLeave var(--transition-fast) forwards;
+}
+
+@keyframes viewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes viewLeave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ===== STAGGER ANIMATION ===== */
+.stagger-item {
+  animation: staggerFadeIn var(--transition-base) backwards;
+}
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

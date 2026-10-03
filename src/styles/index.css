@@ -4,6 +4,9 @@
 @import './components.css';
 @import './calendar.css';
 @import './utilities.css';
+@import './app-shell.css';
+@import './transitions.css';
+@import './data-table.css';
 
 #app {
   min-height: 100vh;
