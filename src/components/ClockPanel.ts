@@ -26,15 +26,19 @@ export class ClockPanel {
 
     const hasClockIn = record?.clockIn !== undefined;
     const hasClockOut = record?.clockOut !== undefined;
+    const isOffOrIzin = record?.status === 'OFF' || record?.status === 'IZIN';
 
     let statusHtml = '';
     let statusBadge = '';
 
-    if (!hasClockIn) {
+    if (isOffOrIzin) {
+      statusBadge = record!.status === 'IZIN' ? '<span class="badge badge-izin">Izin</span>' : '<span class="badge badge-off">Libur</span>';
+      statusHtml = `<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Absensi hari ini sudah lengkap</p><div id="live-clock" style="margin-top: var(--spacing-3); font-size: var(--text-sm); color: var(--color-text-secondary);">${getCurrentTime()}</div>`;
+    } else if (!hasClockIn) {
       statusBadge = '<span class="badge badge-off">Belum Absen</span>';
       statusHtml = `<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Mulai hari kerja Anda dengan clock in</p><div id="live-clock" style="margin-top: var(--spacing-3); font-size: var(--text-lg); font-weight: 600; letter-spacing: 0.02em;">${getCurrentTime()}</div>`;
-    } else if (hasClockIn && !hasClockOut && record.clockIn) {
-      const liveMin = getLiveMinutes(record.clockIn.time);
+    } else if (hasClockIn && !hasClockOut && record!.clockIn) {
+      const liveMin = getLiveMinutes(record!.clockIn.time);
       statusBadge = '<span class="badge badge-work badge-dot">Sedang Bekerja</span>';
       statusHtml = `
         <div style="margin: var(--spacing-6) 0;">
@@ -42,7 +46,7 @@ export class ClockPanel {
             ${formatDuration(liveMin)}
           </div>
           <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--spacing-2);">
-            ${formatDecimal(liveMin)} jam · Clock In: ${formatTime12hShort(record.clockIn.time)}
+            ${formatDecimal(liveMin)} jam · Clock In: ${formatTime12hShort(record!.clockIn.time)}
           </div>
           <div id="live-clock" style="margin-top: var(--spacing-2); font-size: var(--text-sm); color: var(--color-text-secondary);">${getCurrentTime()}</div>
         </div>
@@ -60,7 +64,7 @@ export class ClockPanel {
         ${statusBadge}
         ${statusHtml}
         <div style="margin-top: var(--spacing-8); display: flex; flex-direction: column; gap: var(--spacing-3);">
-          ${!hasClockIn ? `
+          ${!hasClockIn && !isOffOrIzin ? `
             <select id="status-select" class="form-select" aria-label="Pilih Status" style="text-align: center; font-weight: 500;">
               <option value="WORK">🏢 Kerja</option>
               <option value="OFF">🏖️ Libur</option>
@@ -76,7 +80,7 @@ export class ClockPanel {
               Clock In
             </button>
           ` : ''}
-          ${hasClockIn && !hasClockOut ? `
+          ${hasClockIn && !hasClockOut && !isOffOrIzin ? `
             <button class="btn btn-primary btn-lg" id="btn-clock-out" style="box-shadow: var(--shadow-primary);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>

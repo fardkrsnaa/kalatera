@@ -47,7 +47,7 @@ export class AppShell {
       <main class="main-content">
         <header class="main-header">
           <div class="main-header-left">
-            <button class="btn btn-ghost btn-icon" id="btn-mobile-menu" aria-label="Open menu" style="display: none;">
+            <button class="btn btn-ghost btn-icon" id="btn-mobile-menu" aria-label="Open menu">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -79,7 +79,7 @@ export class AppShell {
     ];
 
     nav.innerHTML = items.map(item => `
-      <a href="#${item.route}" class="sidebar-item ${currentRoute === item.route ? 'active' : ''}" data-route="${item.route}">
+      <a href="#${item.route}" class="sidebar-item ${currentRoute === item.route ? 'active' : ''}" data-route="${item.route}" data-tooltip="${item.label}">
         ${item.icon}
         <span class="sidebar-item-label">${item.label}</span>
       </a>
@@ -122,7 +122,25 @@ export class AppShell {
       if (e.key === 'Escape') {
         this.closeMobileDrawer();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        if (window.innerWidth <= 768) {
+          this.sidebar.classList.contains('show') ? this.closeMobileDrawer() : this.openMobileDrawer();
+        } else {
+          this.toggleSidebar();
+        }
+      }
     });
+
+    let touchStartX = 0;
+    this.container.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    this.container.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (touchStartX < 40 && dx > 60) this.openMobileDrawer();
+      if (dx < -60 && this.sidebar.classList.contains('show')) this.closeMobileDrawer();
+    }, { passive: true });
   }
 
   private initRouter(): void {
