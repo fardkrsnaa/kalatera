@@ -1,11 +1,14 @@
 import { getRecord, saveRecord, type Status } from '../core/storage';
 import { showToast } from './Toast';
 import { store } from '../core/store';
-import { validateClockTimes, validateBreakMinutes, validateNormalHours } from '../utils/validators';
+import { validateTime12h, validateBreakMinutes, validateNormalHours } from '../utils/validators';
+import { TimeInput12h } from './TimeInput12h';
 
 export class EditModal {
   private container: HTMLDivElement;
   private date: string;
+  private clockInInput: TimeInput12h | null = null;
+  private clockOutInput: TimeInput12h | null = null;
 
   constructor(date: string) {
     this.date = date;
@@ -15,14 +18,14 @@ export class EditModal {
 
   private render(): void {
     const record = getRecord(this.date);
-    
+
     if (!record) {
       this.close();
       return;
     }
 
-    const clockInTime = record.clockIn?.time || '';
-    const clockOutTime = record.clockOut?.time || '';
+    const clockInVal = record.clockIn?.time || '';
+    const clockOutVal = record.clockOut?.time || '';
 
     this.container.className = 'modal-overlay';
     this.container.innerHTML = `
@@ -38,21 +41,15 @@ export class EditModal {
               <select id="status" class="form-select" required>
                 <option value="WORK" ${record.status === 'WORK' ? 'selected' : ''}>Kerja</option>
                 <option value="OFF" ${record.status === 'OFF' ? 'selected' : ''}>Libur</option>
+                <option value="IZIN" ${record.status === 'IZIN' ? 'selected' : ''}>Izin</option>
                 <option value="MIDDLE" ${record.status === 'MIDDLE' ? 'selected' : ''}>Middle</option>
                 <option value="OVERTIME" ${record.status === 'OVERTIME' ? 'selected' : ''}>Lembur</option>
               </select>
             </div>
 
-            <div id="time-fields" style="${record.status === 'OFF' ? 'display: none;' : ''}">
-              <div class="form-group">
-                <label class="form-label" for="clock-in">Jam Masuk (HH:mm:ss)</label>
-                <input type="text" id="clock-in" class="form-input" value="${clockInTime}" placeholder="08:00:00" />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="clock-out">Jam Keluar (HH:mm:ss)</label>
-                <input type="text" id="clock-out" class="form-input" value="${clockOutTime}" placeholder="16:00:00" />
-              </div>
+            <div id="time-fields" style="${record.status === 'OFF' || record.status === 'IZIN' ? 'display: none;' : ''}">
+              <div class="form-group" id="clock-in-group"></div>
+              <div class="form-group" id="clock-out-group"></div>
 
               <div class="form-group">
                 <label class="form-label" for="break-minutes">Istirahat (menit)</label>
@@ -78,11 +75,17 @@ export class EditModal {
       </div>
     `;
 
+    this.clockInInput = new TimeInput12h({ label: 'Jam Masuk', namePrefix: 'clock-in', value: clockInVal || undefined });
+    this.clockOutInput = new TimeInput12h({ label: 'Jam Keluar', namePrefix: 'clock-out', value: clockOutVal || undefined });
+    this.clockInInput.mount(this.container.querySelector('#clock-in-group')!);
+    this.clockOutInput.mount(this.container.querySelector('#clock-out-group')!);
+
     const statusSelect = this.container.querySelector('#status') as HTMLSelectElement;
     const timeFields = this.container.querySelector('#time-fields') as HTMLDivElement;
 
     statusSelect.addEventListener('change', () => {
-      timeFields.style.display = statusSelect.value === 'OFF' ? 'none' : 'block';
+      const v = statusSelect.value;
+      timeFields.style.display = v === 'OFF' || v === 'IZIN' ? 'none' : 'block';
     });
 
     this.container.querySelector('.btn-close')!.addEventListener('click', () => this.close());
@@ -104,13 +107,13 @@ export class EditModal {
     }
 
     const status = (this.container.querySelector('#status') as HTMLSelectElement).value as Status;
-    const clockInInput = (this.container.querySelector('#clock-in') as HTMLInputElement).value.trim();
-    const clockOutInput = (this.container.querySelector('#clock-out') as HTMLInputElement).value.trim();
+    const clockInVal = this.clockInInput?.getValue() ?? '';
+    const clockOutVal = this.clockOutInput?.getValue() ?? '';
     const breakMinutes = parseInt((this.container.querySelector('#break-minutes') as HTMLInputElement).value, 10);
     const normalHours = parseFloat((this.container.querySelector('#normal-hours') as HTMLInputElement).value);
     const note = (this.container.querySelector('#note') as HTMLTextAreaElement).value.trim();
 
-    if (status === 'OFF') {
+    if (status === 'OFF' || status === 'IZIN') {
       record.status = status;
       record.clockIn = undefined;
       record.clockOut = undefined;
@@ -126,9 +129,13 @@ export class EditModal {
       return;
     }
 
-    const timeError = validateClockTimes(clockInInput, clockOutInput);
-    if (timeError) {
-      showToast(timeError, 'error');
+    const hasClockInOut = clockInVal || clockOutVal;
+    if (hasClockInOut && clockInVal && !validateTime12h(clockInVal)) {
+      showToast('Format jam masuk tidak valid (hh:mm:ss AM/PM)', 'error');
+      return;
+    }
+    if (clockOutVal && !validateTime12h(clockOutVal)) {
+      showToast('Format jam keluar tidak valid (hh:mm:ss AM/PM)', 'error');
       return;
     }
 
@@ -144,7 +151,7 @@ export class EditModal {
       return;
     }
 
-    if (!clockInInput) {
+    if (!clockInVal && !clockInInputEmptyAllowed(record)) {
       showToast('Jam masuk wajib diisi', 'error');
       return;
     }
@@ -155,21 +162,23 @@ export class EditModal {
     record.note = note || undefined;
     record.updatedAt = Date.now();
 
-    if (clockInInput && record.clockIn) {
-      record.clockIn.time = clockInInput;
+    if (clockInVal && record.clockIn) {
+      record.clockIn.time = clockInVal;
+    } else if (clockInVal && !record.clockIn) {
+      record.clockIn = { time: clockInVal, photoId: 'manual-edit', lat: 0, lon: 0, address: 'Manual Edit' };
     }
 
-    if (clockOutInput && record.clockOut) {
-      record.clockOut.time = clockOutInput;
-    } else if (clockOutInput && record.clockIn) {
+    if (clockOutVal && record.clockOut) {
+      record.clockOut.time = clockOutVal;
+    } else if (clockOutVal && record.clockIn) {
       record.clockOut = {
-        time: clockOutInput,
+        time: clockOutVal,
         photoId: 'manual-edit',
         lat: record.clockIn.lat,
         lon: record.clockIn.lon,
         address: record.clockIn.address,
       };
-    } else {
+    } else if (!clockOutVal) {
       record.clockOut = undefined;
     }
 
@@ -186,4 +195,8 @@ export class EditModal {
   private close(): void {
     this.container.remove();
   }
+}
+
+function clockInInputEmptyAllowed(record: { status: Status }): boolean {
+  return record.status === 'OFF' || record.status === 'IZIN';
 }

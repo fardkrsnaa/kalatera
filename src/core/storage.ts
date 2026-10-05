@@ -1,9 +1,11 @@
-const SCHEMA_VERSION = 1;
+import { formatTime24To12h, validateTime24h } from '../utils/validators';
+
+const SCHEMA_VERSION = 2;
 const SCHEMA_KEY = 'kalatera:schemaVersion';
 const RECORDS_KEY = 'kalatera:v1:records';
 const SETTINGS_KEY = 'kalatera:v1:settings';
 
-export type Status = 'WORK' | 'OFF' | 'MIDDLE' | 'OVERTIME';
+export type Status = 'WORK' | 'OFF' | 'MIDDLE' | 'OVERTIME' | 'IZIN';
 
 export interface ClockEvent {
   time: string;
@@ -41,9 +43,26 @@ function setVersion(v: number): void {
   localStorage.setItem(SCHEMA_KEY, v.toString());
 }
 
+function migrateTimeFormat(data: RecordsMap): RecordsMap {
+  for (const key of Object.keys(data)) {
+    const r = data[key];
+    if (r.clockIn?.time && validateTime24h(r.clockIn.time)) {
+      try { r.clockIn.time = formatTime24To12h(r.clockIn.time); } catch {}
+    }
+    if (r.clockOut?.time && validateTime24h(r.clockOut.time)) {
+      try { r.clockOut.time = formatTime24To12h(r.clockOut.time); } catch {}
+    }
+  }
+  return data;
+}
+
 function migrate(oldVersion: number, newVersion: number, data: RecordsMap): RecordsMap {
   if (oldVersion === newVersion) return data;
-  return data;
+  let result = data;
+  if (oldVersion < 2 && newVersion >= 2) {
+    result = migrateTimeFormat(result);
+  }
+  return result;
 }
 
 export function initStorage(): void {

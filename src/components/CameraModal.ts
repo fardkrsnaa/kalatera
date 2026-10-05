@@ -87,6 +87,12 @@ export class CameraModal {
     this.container.querySelector('.btn-close')!.addEventListener('click', () => this.close());
     this.container.querySelector('#btn-switch')!.addEventListener('click', () => this.switchCamera());
     this.container.querySelector('#btn-capture')!.addEventListener('click', () => this.capture());
+
+    this.container.addEventListener('click', (e) => {
+      if (e.target === this.container) {
+        this.close();
+      }
+    });
   }
 
   async open(): Promise<void> {
@@ -219,8 +225,10 @@ export class CameraModal {
   }
 
   private async close(): Promise<void> {
-    await this.camera.stop();
     this.container.remove();
+    try {
+      await this.camera.stop();
+    } catch {}
     if (this.onCloseCallback) {
       this.onCloseCallback();
     }

@@ -1,8 +1,10 @@
+import { parseTimeAny } from '../utils/validators';
+
 export type Shift = 'Pagi' | 'Siang' | 'Malam' | 'Dini Hari';
 
 export function detectShift(clockInTime: string): Shift {
-  const hour = parseInt(clockInTime.split(':')[0], 10);
-  
+  const parsed = parseTimeAny(clockInTime);
+  const hour = parsed ? parsed.h : parseInt(clockInTime.split(':')[0], 10);
   if (hour >= 6 && hour < 11) return 'Pagi';
   if (hour >= 11 && hour < 17) return 'Siang';
   if (hour >= 17 && hour < 23) return 'Malam';

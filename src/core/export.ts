@@ -1,6 +1,6 @@
 import { Workbook } from 'exceljs';
 import { getAllRecords } from './storage';
-import { computeDuration } from './calc';
+import { computeDuration, getMonthlySummary } from './calc';
 import { formatDuration, formatDecimal } from '../utils/format';
 
 export interface ExportOptions {
@@ -71,6 +71,8 @@ export async function exportToExcel(options: ExportOptions): Promise<void> {
 
     if (record.status === 'OFF') {
       totalOffDays++;
+    } else if (record.status === 'IZIN') {
+      // izin not counted as work/off
     } else if (record.clockIn && record.clockOut) {
       totalWorkDays++;
       totalWorkMinutes += duration.workMinutes;
@@ -82,6 +84,7 @@ export async function exportToExcel(options: ExportOptions): Promise<void> {
       OFF: 'Libur',
       MIDDLE: 'Middle',
       OVERTIME: 'Lembur',
+      IZIN: 'Izin',
     };
 
     sheet.addRow({
@@ -90,9 +93,9 @@ export async function exportToExcel(options: ExportOptions): Promise<void> {
       status: statusMap[record.status] || record.status,
       clockIn: record.clockIn?.time || '-',
       clockOut: record.clockOut?.time || '-',
-      break: record.status === 'OFF' ? '-' : record.breakMinutes,
-      work: record.status === 'OFF' ? '-' : `${formatDuration(duration.workMinutes)} (${formatDecimal(duration.workMinutes)})`,
-      overtime: record.status === 'OFF' ? '-' : `${formatDuration(duration.overtimeMinutes)} (${formatDecimal(duration.overtimeMinutes)})`,
+      break: record.status === 'OFF' || record.status === 'IZIN' ? '-' : record.breakMinutes,
+      work: record.status === 'OFF' || record.status === 'IZIN' ? '-' : `${formatDuration(duration.workMinutes)} (${formatDecimal(duration.workMinutes)})`,
+      overtime: record.status === 'OFF' || record.status === 'IZIN' ? '-' : `${formatDuration(duration.overtimeMinutes)} (${formatDecimal(duration.overtimeMinutes)})`,
       locationIn: record.clockIn?.address || '-',
       locationOut: record.clockOut?.address || '-',
       note: record.note || '-',
@@ -129,6 +132,40 @@ export async function exportToExcel(options: ExportOptions): Promise<void> {
   const a = document.createElement('a');
   a.href = url;
   a.download = `Kalatera_Absensi_${options.year}-${String(options.month + 1).padStart(2, '0')}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function exportAdminSummary(options: ExportOptions): Promise<void> {
+  const workbook = new Workbook();
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  const sheet = workbook.addWorksheet('Ringkasan Admin');
+  sheet.columns = [
+    { header: 'Metrik', key: 'metric', width: 25 },
+    { header: 'Nilai', key: 'value', width: 25 },
+  ];
+  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1976D2' } };
+  const s = getMonthlySummary(options.year, options.month);
+  sheet.addRow({ metric: `Periode`, value: `${monthNames[options.month]} ${options.year}` });
+  sheet.addRow({ metric: 'Total Jam Lembur', value: `${formatDuration(s.overtimeMinutes)} (${formatDecimal(s.overtimeMinutes)} jam)` });
+  sheet.addRow({ metric: 'Total Hari Izin', value: `${s.izinDays} hari` });
+  sheet.addRow({ metric: 'Total Hari Kerja', value: `${s.workDays} hari` });
+  sheet.addRow({ metric: 'Total Hari Libur', value: `${s.offDays} hari` });
+  const now = new Date();
+  sheet.addRow({
+    metric: 'Diekspor',
+    value: `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+  });
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Kalatera_Admin_Rekap_${options.year}-${String(options.month + 1).padStart(2, '0')}.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -7,6 +7,7 @@ import { store } from '../core/store';
 import { formatDuration, formatDecimal } from '../utils/format';
 import { getLiveMinutes } from '../core/calc';
 import { getCurrentPosition } from '../core/geolocation';
+import { formatTime12hShort } from '../utils/validators';
 
 export class ClockPanel {
   private container: HTMLDivElement;
@@ -16,7 +17,6 @@ export class ClockPanel {
     this.container = document.createElement('div');
     this.render();
     this.startTimer();
-    
     store.subscribe(() => this.render());
   }
 
@@ -29,10 +29,10 @@ export class ClockPanel {
 
     let statusHtml = '';
     let statusBadge = '';
-    
+
     if (!hasClockIn) {
       statusBadge = '<span class="badge badge-off">Belum Absen</span>';
-      statusHtml = '<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Mulai hari kerja Anda dengan clock in</p>';
+      statusHtml = `<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Mulai hari kerja Anda dengan clock in</p><div id="live-clock" style="margin-top: var(--spacing-3); font-size: var(--text-lg); font-weight: 600; letter-spacing: 0.02em;">${getCurrentTime()}</div>`;
     } else if (hasClockIn && !hasClockOut && record.clockIn) {
       const liveMin = getLiveMinutes(record.clockIn.time);
       statusBadge = '<span class="badge badge-work badge-dot">Sedang Bekerja</span>';
@@ -42,13 +42,14 @@ export class ClockPanel {
             ${formatDuration(liveMin)}
           </div>
           <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--spacing-2);">
-            ${formatDecimal(liveMin)} jam · Clock In: ${record.clockIn.time.slice(0, 5)}
+            ${formatDecimal(liveMin)} jam · Clock In: ${formatTime12hShort(record.clockIn.time)}
           </div>
+          <div id="live-clock" style="margin-top: var(--spacing-2); font-size: var(--text-sm); color: var(--color-text-secondary);">${getCurrentTime()}</div>
         </div>
       `;
     } else {
       statusBadge = '<span class="badge badge-work">Selesai</span>';
-      statusHtml = '<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Absensi hari ini sudah lengkap</p>';
+      statusHtml = `<p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: var(--spacing-2);">Absensi hari ini sudah lengkap</p><div id="live-clock" style="margin-top: var(--spacing-3); font-size: var(--text-sm); color: var(--color-text-secondary);">${getCurrentTime()}</div>`;
     }
 
     this.container.className = 'card card-elevated';
@@ -63,6 +64,7 @@ export class ClockPanel {
             <select id="status-select" class="form-select" aria-label="Pilih Status" style="text-align: center; font-weight: 500;">
               <option value="WORK">🏢 Kerja</option>
               <option value="OFF">🏖️ Libur</option>
+              <option value="IZIN">📋 Izin</option>
               <option value="MIDDLE">⏰ Middle</option>
               <option value="OVERTIME">🌙 Lembur</option>
             </select>
@@ -100,14 +102,14 @@ export class ClockPanel {
 
   private async handleClockIn(): Promise<void> {
     const statusSelect = this.container.querySelector('#status-select') as HTMLSelectElement;
-    const status = statusSelect.value as 'WORK' | 'OFF' | 'MIDDLE' | 'OVERTIME';
+    const status = statusSelect.value as 'WORK' | 'OFF' | 'MIDDLE' | 'OVERTIME' | 'IZIN';
 
-    if (status === 'OFF') {
+    if (status === 'OFF' || status === 'IZIN') {
       const today = getToday();
       const settings = getSettings();
       const record = {
         date: today,
-        status: 'OFF' as const,
+        status,
         breakMinutes: settings.defaultBreakMinutes,
         normalHours: settings.defaultNormalHours,
         createdAt: Date.now(),
@@ -115,7 +117,7 @@ export class ClockPanel {
       };
       saveRecord(record);
       store.notify();
-      showToast('Status Libur disimpan', 'success');
+      showToast(`Status ${status === 'IZIN' ? 'Izin' : 'Libur'} disimpan`, 'success');
       return;
     }
 
@@ -263,8 +265,9 @@ export class ClockPanel {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-
     this.timerInterval = window.setInterval(() => {
+      const el = this.container.querySelector('#live-clock');
+      if (el) el.textContent = getCurrentTime();
       const today = getToday();
       const record = getRecord(today);
       if (record?.clockIn && !record.clockOut) {

@@ -13,12 +13,10 @@ export class DetailModal {
   constructor(date: string) {
     this.date = date;
     this.container = document.createElement('div');
-    this.render();
   }
 
   private async render(): Promise<void> {
     const record = getRecord(this.date);
-    
     if (!record) {
       this.close();
       return;
@@ -28,7 +26,7 @@ export class DetailModal {
     const duration = computeDuration(record);
 
     let photosHtml = '';
-    
+
     if (record.clockIn) {
       const photo = record.clockIn.photoId !== 'no-photo' ? await getPhoto(record.clockIn.photoId) : null;
       const photoUrl = photo ? URL.createObjectURL(photo.blob) : '';
@@ -68,11 +66,11 @@ export class DetailModal {
           <div style="margin-bottom: var(--spacing-md);">
             <p style="font-size: 1.25rem; font-weight: 600;">${formatDateTime(dateObj)}</p>
             <div class="badge badge-${record.status.toLowerCase()}" style="margin-top: var(--spacing-xs);">
-              ${record.status === 'WORK' ? 'Kerja' : record.status === 'OFF' ? 'Libur' : record.status === 'MIDDLE' ? 'Middle' : 'Lembur'}
+              ${record.status === 'WORK' ? 'Kerja' : record.status === 'OFF' ? 'Libur' : record.status === 'IZIN' ? 'Izin' : record.status === 'MIDDLE' ? 'Middle' : 'Lembur'}
             </div>
           </div>
 
-          ${record.status !== 'OFF' ? `
+          ${record.status !== 'OFF' && record.status !== 'IZIN' ? `
             <div style="background: var(--color-surface); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-md);">
                 <div>
@@ -128,6 +126,7 @@ export class DetailModal {
 
   async open(): Promise<void> {
     await this.render();
+    document.querySelectorAll('.modal-overlay').forEach((el) => el.remove());
     document.body.appendChild(this.container);
   }
 

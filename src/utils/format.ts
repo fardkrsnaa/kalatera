@@ -1,8 +1,10 @@
+import { formatTime24To12h } from './validators';
+
 export function formatTime(date: Date): string {
   const h = String(date.getHours()).padStart(2, '0');
   const m = String(date.getMinutes()).padStart(2, '0');
   const s = String(date.getSeconds()).padStart(2, '0');
-  return `${h}:${m}:${s}`;
+  return formatTime24To12h(`${h}:${m}:${s}`);
 }
 
 export function formatDate(date: Date): string {

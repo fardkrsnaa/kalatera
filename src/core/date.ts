@@ -1,3 +1,5 @@
+import { formatTime24To12h } from '../utils/validators';
+
 export function getToday(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -11,6 +13,14 @@ export function getCurrentTime(): string {
   const h = String(now.getHours()).padStart(2, '0');
   const m = String(now.getMinutes()).padStart(2, '0');
   const s = String(now.getSeconds()).padStart(2, '0');
+  return formatTime24To12h(`${h}:${m}:${s}`);
+}
+
+export function getCurrentTime24(): string {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
 
@@ -20,6 +30,16 @@ export function parseDate(dateStr: string): Date {
 }
 
 export function parseTime(timeStr: string): { h: number; m: number; s: number } {
+  const ampm = timeStr.match(/^(0[1-9]|1[0-2]):([0-5][0-9]):([0-5][0-9]) (AM|PM)$/);
+  if (ampm) {
+    let h12 = parseInt(ampm[1], 10);
+    const m = parseInt(ampm[2], 10);
+    const s = parseInt(ampm[3], 10);
+    const period = ampm[4];
+    let h = h12 % 12;
+    if (period === 'PM') h += 12;
+    return { h, m, s };
+  }
   const [h, m, s] = timeStr.split(':').map(Number);
   return { h, m, s };
 }

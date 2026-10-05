@@ -1,5 +1,39 @@
 import type { DayRecord } from './storage';
+import { getAllRecords } from './storage';
 import { parseTime } from './date';
+import { parseTimeAny } from '../utils/validators';
+
+export interface MonthlySummary {
+  overtimeMinutes: number;
+  izinDays: number;
+  workDays: number;
+  offDays: number;
+  totalWorkMinutes: number;
+}
+
+export function getMonthlySummary(year: number, month: number): MonthlySummary {
+  const records = getAllRecords();
+  let overtimeMinutes = 0;
+  let izinDays = 0;
+  let workDays = 0;
+  let offDays = 0;
+  let totalWorkMinutes = 0;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const record = records[dateStr];
+    if (!record) continue;
+    if (record.status === 'IZIN') izinDays++;
+    else if (record.status === 'OFF') offDays++;
+    else if (record.clockIn && record.clockOut) {
+      workDays++;
+      const d = computeDuration(record);
+      totalWorkMinutes += d.workMinutes;
+      overtimeMinutes += d.overtimeMinutes;
+    }
+  }
+  return { overtimeMinutes, izinDays, workDays, offDays, totalWorkMinutes };
+}
 
 export interface DurationResult {
   workMinutes: number;
@@ -7,7 +41,7 @@ export interface DurationResult {
 }
 
 export function computeDuration(record: DayRecord): DurationResult {
-  if (record.status === 'OFF') {
+  if (record.status === 'OFF' || record.status === 'IZIN') {
     return { workMinutes: 0, overtimeMinutes: 0 };
   }
 
@@ -53,6 +87,11 @@ export function calculateMinutesBetween(startTime: string, endTime: string): num
 
 export function getLiveMinutes(startTime: string): number {
   const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  return calculateMinutesBetween(startTime, currentTime);
+  const start = parseTimeAny(startTime);
+  const end = { h: now.getHours(), m: now.getMinutes(), s: now.getSeconds() };
+  if (!start) return 0;
+  let startMin = start.h * 60 + start.m;
+  let endMin = end.h * 60 + end.m;
+  if (endMin < startMin) endMin += 24 * 60;
+  return endMin - startMin;
 }

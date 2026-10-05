@@ -74,6 +74,7 @@ export class AppShell {
     const items = [
       { route: 'absensi' as const, icon: this.getIcon('dashboard'), label: 'Absensi' },
       { route: 'data' as const, icon: this.getIcon('table'), label: 'Data Absensi' },
+      { route: 'admin' as const, icon: this.getIcon('admin'), label: 'Ringkasan Admin' },
       { route: 'settings' as const, icon: this.getIcon('settings'), label: 'Pengaturan' },
     ];
 
@@ -87,7 +88,7 @@ export class AppShell {
     nav.querySelectorAll('.sidebar-item').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
-        const route = (item as HTMLElement).dataset.route as 'absensi' | 'data' | 'settings';
+        const route = (item as HTMLElement).dataset.route as 'absensi' | 'data' | 'admin' | 'settings';
         router.navigate(route);
         this.closeMobileDrawer();
       });
@@ -99,6 +100,7 @@ export class AppShell {
       dashboard: `<svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>`,
       table: `<svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="3" x2="3" y2="21"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>`,
       settings: `<svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m13.2 5.2l-4.2-4.2m0-6l-4.2-4.2"></path></svg>`,
+      admin: `<svg class="sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
     };
     return icons[name] || '';
   }
@@ -139,6 +141,7 @@ export class AppShell {
     const titles: Record<string, string> = {
       absensi: 'Absensi',
       data: 'Data Absensi',
+      admin: 'Ringkasan Admin',
       settings: 'Pengaturan'
     };
     this.container.querySelector('#page-title')!.textContent = titles[route] || 'Kalatera';
@@ -151,6 +154,7 @@ export class AppShell {
     const { AbsensiView } = await import('./AbsensiView');
     const { DataAbsensiView } = await import('./DataAbsensiView');
     const { SettingsView } = await import('./SettingsView');
+    const { AdminSummaryView } = await import('./AdminSummaryView');
 
     const oldView = this.currentView;
     let newViewElement: HTMLElement;
@@ -158,6 +162,9 @@ export class AppShell {
     switch (route) {
       case 'data':
         newViewElement = new DataAbsensiView().element;
+        break;
+      case 'admin':
+        newViewElement = new AdminSummaryView().element;
         break;
       case 'settings':
         newViewElement = new SettingsView().element;

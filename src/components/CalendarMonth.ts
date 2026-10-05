@@ -2,6 +2,7 @@ import { getAllRecords } from '../core/storage';
 import { computeDuration } from '../core/calc';
 import { getDaysInMonth, getFirstDayOfMonth } from '../core/date';
 import { formatDuration } from '../utils/format';
+import { formatTime12hShort } from '../utils/validators';
 import { store } from '../core/store';
 import { exportToExcel } from '../core/export';
 import { showToast } from './Toast';
@@ -33,16 +34,19 @@ export class CalendarMonth {
 
     let totalWorkDays = 0;
     let totalOffDays = 0;
+    let totalIzinDays = 0;
     let totalWorkMinutes = 0;
     let totalOvertimeMinutes = 0;
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${this.currentYear}-${String(this.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const record = records[dateStr];
-      
+
       if (record) {
         if (record.status === 'OFF') {
           totalOffDays++;
+        } else if (record.status === 'IZIN') {
+          totalIzinDays++;
         } else if (record.clockIn && record.clockOut) {
           totalWorkDays++;
           const duration = computeDuration(record);
@@ -56,6 +60,7 @@ export class CalendarMonth {
     const calendarGrid: string[] = [];
     
     const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const isCurrentMonth = this.currentYear === today.getFullYear() && this.currentMonth === today.getMonth();
 
     for (let i = 0; i < firstDay; i++) {
@@ -72,17 +77,21 @@ export class CalendarMonth {
       let cellClass = 'day-cell';
       if (isWeekend) cellClass += ' weekend';
       if (isToday) cellClass += ' today';
+      const isPast = dateStr < todayStr;
+      if (isPast && !record) cellClass += ' past-day';
       let cellContent = `<div class="day-number">${day}</div>`;
 
       if (record) {
         cellClass += ` has-record status-${record.status.toLowerCase()}`;
-        
+
         if (record.status === 'OFF') {
           cellContent += '<div class="day-badge badge badge-off">Libur</div>';
+        } else if (record.status === 'IZIN') {
+          cellContent += '<div class="day-badge badge badge-izin">Izin</div>';
         } else if (record.clockIn && record.clockOut) {
           const duration = computeDuration(record);
           cellContent += `
-            <div class="day-time">${record.clockIn.time.slice(0, 5)} - ${record.clockOut.time.slice(0, 5)}</div>
+            <div class="day-time">${formatTime12hShort(record.clockIn.time)} - ${formatTime12hShort(record.clockOut.time)}</div>
             <div class="day-duration">${formatDuration(duration.workMinutes)}</div>
           `;
           if (duration.overtimeMinutes > 0) {
@@ -120,6 +129,10 @@ export class CalendarMonth {
             <div class="summary-item">
               <div class="summary-label">Hari Libur</div>
               <div class="summary-value">${totalOffDays}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Hari Izin</div>
+              <div class="summary-value">${totalIzinDays}</div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Total Jam Kerja</div>
@@ -163,12 +176,15 @@ export class CalendarMonth {
     this.container.querySelector('#btn-today')!.addEventListener('click', () => this.goToday());
     this.container.querySelector('#btn-export')!.addEventListener('click', () => this.exportExcel());
 
-    this.container.querySelectorAll('.day-cell.has-record').forEach((cell) => {
+    this.container.querySelectorAll('.day-cell.has-record, .day-cell.past-day').forEach((cell) => {
       cell.addEventListener('click', (e) => {
         const target = e.currentTarget as HTMLElement;
         const date = target.dataset.date;
-        if (date) {
+        if (!date) return;
+        if (target.classList.contains('has-record')) {
           this.showDayDetail(date);
+        } else {
+          this.showManualEntry(date);
         }
       });
     });
@@ -201,6 +217,11 @@ export class CalendarMonth {
 
   private showDayDetail(date: string): void {
     const event = new CustomEvent('showDayDetail', { detail: { date } });
+    window.dispatchEvent(event);
+  }
+
+  private showManualEntry(date: string): void {
+    const event = new CustomEvent('showManualEntry', { detail: { date } });
     window.dispatchEvent(event);
   }
 

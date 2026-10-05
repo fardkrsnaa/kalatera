@@ -2,6 +2,7 @@ import { getAllRecords } from '../core/storage';
 import { computeDuration } from '../core/calc';
 import { detectShift, getShiftBadgeClass, type Shift } from '../core/shift';
 import { formatDuration } from '../utils/format';
+import { formatTime12hShort } from '../utils/validators';
 import { DataTable } from './DataTable';
 import { DetailModal } from './DetailModal';
 import { EditModal } from './EditModal';
@@ -100,17 +101,19 @@ export class DataAbsensiView {
 
       if (record.status === 'OFF') {
         statusLabel = 'Libur';
+      } else if (record.status === 'IZIN') {
+        statusLabel = 'Izin';
       } else if (record.clockIn && record.clockOut) {
         const duration = computeDuration(record);
         statusLabel = 'Hadir';
-        clockIn = record.clockIn.time.slice(0, 5);
-        clockOut = record.clockOut.time.slice(0, 5);
+        clockIn = formatTime12hShort(record.clockIn.time);
+        clockOut = formatTime12hShort(record.clockOut.time);
         workMinutes = duration.workMinutes;
         overtimeMinutes = duration.overtimeMinutes;
         shift = detectShift(record.clockIn.time);
       } else if (record.clockIn) {
         statusLabel = 'Sedang Bekerja';
-        clockIn = record.clockIn.time.slice(0, 5);
+        clockIn = formatTime12hShort(record.clockIn.time);
         shift = detectShift(record.clockIn.time);
       } else {
         statusLabel = 'Belum Clock In';
@@ -130,7 +133,6 @@ export class DataAbsensiView {
       });
     }
 
-    // Sort by date descending (newest first)
     rows.sort((a, b) => b.date.localeCompare(a.date));
 
     if (this.table) {
@@ -141,8 +143,8 @@ export class DataAbsensiView {
           { key: 'day', header: 'Hari', width: '80px' },
           { key: 'date', header: 'Tanggal', width: '120px' },
           { key: 'status', header: 'Status', width: '140px', render: (row) => this.renderStatus(row) },
-          { key: 'clockIn', header: 'Jam Masuk', width: '110px' },
-          { key: 'clockOut', header: 'Jam Pulang', width: '110px' },
+          { key: 'clockIn', header: 'Jam Masuk', width: '130px' },
+          { key: 'clockOut', header: 'Jam Pulang', width: '130px' },
           { key: 'workMinutes', header: 'Jam Kerja', width: '130px', render: (row) => formatDuration(row.workMinutes) },
           { key: 'overtimeMinutes', header: 'Lembur', width: '110px', render: (row) => row.overtimeMinutes > 0 ? `+${formatDuration(row.overtimeMinutes)}` : '-' },
           { key: 'shift', header: 'Shift', width: '110px', render: (row) => this.renderShiftBadge(row) },
@@ -162,7 +164,8 @@ export class DataAbsensiView {
   }
 
   private renderStatus(row: TableRow): string {
-    const statusClass = row.status === 'Libur' ? 'badge-off' : 
+    const statusClass = row.status === 'Libur' ? 'badge-off' :
+                        row.status === 'Izin' ? 'badge-izin' :
                         row.status === 'Sedang Bekerja' ? 'badge-work' : 'badge-work';
     return `<span class="badge ${statusClass}">${row.status}</span>`;
   }

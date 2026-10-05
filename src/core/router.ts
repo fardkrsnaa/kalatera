@@ -1,4 +1,4 @@
-export type Route = 'absensi' | 'data' | 'settings';
+export type Route = 'absensi' | 'data' | 'admin' | 'settings';
 
 type RouteListener = (route: Route) => void;
 
@@ -29,7 +29,7 @@ class Router {
   }
 
   private parseRoute(hash: string): Route {
-    const validRoutes: Route[] = ['absensi', 'data', 'settings'];
+    const validRoutes: Route[] = ['absensi', 'data', 'admin', 'settings'];
     return validRoutes.includes(hash as Route) ? (hash as Route) : 'absensi';
   }
 

@@ -2,11 +2,22 @@ import { Header } from './Header';
 import { ClockPanel } from './ClockPanel';
 import { CalendarMonth } from './CalendarMonth';
 import { DetailModal } from './DetailModal';
+import { ManualEntryModal } from './ManualEntryModal';
 
 export class AbsensiView {
   public element: HTMLElement;
   private clockPanel!: ClockPanel;
   private calendarMonth!: CalendarMonth;
+  private onShowDayDetail = async (e: Event) => {
+    const { date } = (e as CustomEvent).detail;
+    const modal = new DetailModal(date);
+    await modal.open();
+  };
+  private onShowManualEntry = (e: Event) => {
+    const { date } = (e as CustomEvent).detail;
+    const modal = new ManualEntryModal(date);
+    modal.open();
+  };
 
   constructor() {
     this.element = document.createElement('div');
@@ -32,15 +43,13 @@ export class AbsensiView {
     this.calendarMonth = new CalendarMonth();
     this.calendarMonth.mount(this.element.querySelector('#calendar-month')!);
 
-    this.element.addEventListener('showDayDetail', async (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { date } = customEvent.detail;
-      const modal = new DetailModal(date);
-      await modal.open();
-    });
+    window.addEventListener('showDayDetail', this.onShowDayDetail);
+    window.addEventListener('showManualEntry', this.onShowManualEntry);
   }
 
   destroy(): void {
+    window.removeEventListener('showDayDetail', this.onShowDayDetail);
+    window.removeEventListener('showManualEntry', this.onShowManualEntry);
     this.clockPanel?.destroy();
     this.calendarMonth?.destroy();
   }
