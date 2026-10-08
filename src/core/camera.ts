@@ -60,20 +60,11 @@ export class CameraManager {
       throw new Error('Video belum siap');
     }
 
-    let targetWidth = videoWidth;
-    let targetHeight = videoHeight;
-
-    if (videoWidth > options.maxWidth) {
-      const ratio = options.maxWidth / videoWidth;
-      targetWidth = options.maxWidth;
-      targetHeight = Math.round(videoHeight * ratio);
-    }
-
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
 
     const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(

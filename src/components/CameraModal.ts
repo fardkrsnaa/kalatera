@@ -15,7 +15,7 @@ export class CameraModal {
   private container: HTMLDivElement;
   private video: HTMLVideoElement;
   private camera: CameraManager;
-  private facingMode: FacingMode = 'environment';
+  private facingMode: FacingMode = 'user';
   private type: 'CLOCK IN' | 'CLOCK OUT';
   private onCaptureCallback: ((result: CaptureResult) => void) | null = null;
   private onCloseCallback: (() => void) | null = null;
@@ -95,6 +95,14 @@ export class CameraModal {
     });
   }
 
+  private updateVideoTransform(): void {
+    if (this.facingMode === 'user') {
+      this.video.style.transform = 'scaleX(-1)';
+    } else {
+      this.video.style.transform = 'none';
+    }
+  }
+
   async open(): Promise<void> {
     document.body.appendChild(this.container);
     
@@ -102,6 +110,7 @@ export class CameraModal {
     statusEl.style.display = 'block';
 
     try {
+      this.updateVideoTransform();
       await this.camera.start(this.video, this.facingMode);
       statusEl.style.display = 'none';
     } catch (error) {
@@ -116,6 +125,7 @@ export class CameraModal {
     statusEl.style.display = 'block';
 
     try {
+      this.updateVideoTransform();
       await this.camera.start(this.video, this.facingMode);
       statusEl.style.display = 'none';
       this.hideError();
@@ -140,8 +150,8 @@ export class CameraModal {
 
       const photoBlob = await this.camera.capture({
         facingMode: this.facingMode,
-        maxWidth: 800,
-        quality: 0.7,
+        maxWidth: 0,
+        quality: 0.9,
       });
 
       const canvas = document.createElement('canvas');
@@ -150,7 +160,12 @@ export class CameraModal {
       canvas.height = img.height;
       
       const ctx = canvas.getContext('2d')!;
+      if (this.facingMode === 'user') {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
       ctx.drawImage(img, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
 
       const now = new Date();
       drawWatermark(canvas, ctx, {
@@ -163,7 +178,7 @@ export class CameraModal {
         canvas.toBlob(
           (blob) => (blob ? resolve(blob) : reject(new Error('Gagal membuat foto'))),
           'image/jpeg',
-          0.7
+          0.9
         );
       });
 
